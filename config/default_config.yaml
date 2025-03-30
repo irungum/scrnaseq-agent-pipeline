@@ -1,0 +1,31 @@
+# Default configuration for scrnaseq_agent
+
+# Data loading parameters
+data:
+  file_type: h5ad
+  min_genes: 200
+  max_genes: 5000
+  min_cells: 3
+  percent_mt: 20
+
+# Preprocessing parameters
+preprocessing:
+  target_sum: 10000
+  n_highly_variable: 2000
+  min_mean: 0.0125
+  max_mean: 3
+  min_disp: 0.5
+
+# Analysis parameters
+analysis:
+  n_neighbors: 10
+  n_pcs: 40
+  resolution: 0.5
+  random_state: 42
+
+# Output parameters
+output:
+  save_format: h5ad
+  save_plots: true
+  plot_format: png
+  dpi: 300 

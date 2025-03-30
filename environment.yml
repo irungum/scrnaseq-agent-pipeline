@@ -1,0 +1,27 @@
+# environment.yml
+name: scrnaseq_agent_env  # Choose a name for your conda environment
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10        # Or 3.9, 3.11 - be consistent
+  - pip
+  - scanpy>=1.9        # Core analysis library
+  - python-igraph      # Needed by scanpy for Leiden clustering
+  - leidenalg          # Needed by scanpy for Leiden clustering
+  - anndata>=0.8       # Core data structure
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn       # Often used by scanpy dependencies
+  - matplotlib-base    # For plotting (base avoids GUI backend issues)
+  - seaborn            # For plotting
+  - pyyaml             # For reading YAML config files
+  - click              # Recommended for creating nice CLIs (or use argparse)
+  - pytest             # For running tests
+  - boto3              # For AWS S3 interaction (add now or later in Month 1/2)
+  # Add other dependencies as needed
+  - pip:
+    - pre-commit       # Optional: For running checks before git commits
+    # Add any pip-only packages here
