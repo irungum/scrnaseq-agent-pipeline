@@ -102,6 +102,9 @@ ehthumbs.db
 
 # --- Project Specific ---
 
+
+# Input data directories (usually ignored)
+new_data/
 # Log files
 *.log
 
