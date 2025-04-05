@@ -1,31 +1,49 @@
-# Default configuration for scrnaseq_agent
+# config/default_config.yaml
 
-# Data loading parameters
-data:
-  file_type: h5ad
+# Default parameters for the scrnaseq_agent pipeline
+
+pipeline_options:
+  random_seed: 0
+  output_prefix: "scrnaseq_result" # Default prefix if not given on CLI
+
+qc:
+  mito_prefix: "MT-"
   min_genes: 200
-  max_genes: 5000
-  min_cells: 3
-  percent_mt: 20
+  max_genes: null # Use null for None in YAML
+  min_counts: null
+  max_counts: null
+  max_pct_mito: 10.0
 
-# Preprocessing parameters
 preprocessing:
-  target_sum: 10000
-  n_highly_variable: 2000
-  min_mean: 0.0125
-  max_mean: 3
-  min_disp: 0.5
+  target_sum: 10000.0 # Use float format 10000.0 instead of 1e4 for YAML clarity
+  n_hvgs: 2000
+  hvg_flavor: "seurat_v3"
+  scale_max_value: 10.0
 
-# Analysis parameters
-analysis:
-  n_neighbors: 10
-  n_pcs: 40
-  resolution: 0.5
-  random_state: 42
+dimred:
+  n_pca_comps: 50
 
-# Output parameters
-output:
-  save_format: h5ad
-  save_plots: true
-  plot_format: png
-  dpi: 300 
+clustering:
+  n_neighbors: 15
+  leiden_resolution: 1.0
+  skip_umap: false # Explicitly false
+
+dge:
+  method: "wilcoxon"
+  corr_method: "benjamini-hochberg"
+  use_raw: true # Explicitly true
+  key: "rank_genes_groups" # Default DGE results key
+
+annotation:
+  marker_file: null # Path to marker gene JSON file (null means skip)
+  annotation_key: "cell_type_annotation" # Base key for results in adata.obs
+  method: "overlap_count" # 'overlap_count', 'overlap_coef', 'jaccard'
+
+plotting:
+  umap_color: # List of features
+    - "leiden"
+    - "n_genes_by_counts"
+    - "pct_counts_mt"
+  dge_n_genes: 5
+  dpi: 150
+  format: "png"
