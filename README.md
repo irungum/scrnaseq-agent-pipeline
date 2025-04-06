@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # scrnaseq-agent-pipeline
 =======
 # scrnaseq_agent
@@ -85,4 +85,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. 
->>>>>>> c328447 (Initial project structure and environment setup)
+
