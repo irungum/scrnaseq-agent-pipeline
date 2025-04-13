@@ -25,6 +25,7 @@ dependencies:
   - llvmlite            # Numba dependency
   - scikit-misc
   -pytest-mock
+  -igraph>=0.10
   # Try *without* explicitly adding pytorch first.
   # Let scanpy pull it via conda-forge if needed.
   # If errors persist, uncommenting might help (choose one):

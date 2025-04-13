@@ -4,46 +4,61 @@
 
 pipeline_options:
   random_seed: 0
-  output_prefix: "scrnaseq_result" # Default prefix if not given on CLI
+  output_prefix: "scrnaseq_result"
 
 qc:
   mito_prefix: "MT-"
   min_genes: 200
-  max_genes: null # Use null for None in YAML
+  max_genes: null
   min_counts: null
   max_counts: null
   max_pct_mito: 10.0
 
 preprocessing:
-  target_sum: 10000.0 # Use float format 10000.0 instead of 1e4 for YAML clarity
+  target_sum: 10000.0
   n_hvgs: 2000
   hvg_flavor: "seurat_v3"
   scale_max_value: 10.0
 
 dimred:
+  # Only PCA options relevant now
   n_pca_comps: 50
 
 clustering:
   n_neighbors: 15
   leiden_resolution: 1.0
-  skip_umap: false # Explicitly false
+  skip_umap: false
 
 dge:
   method: "wilcoxon"
   corr_method: "benjamini-hochberg"
-  use_raw: true # Explicitly true
-  key: "rank_genes_groups" # Default DGE results key
+  use_raw: true
+  key: "rank_genes_groups"
 
-annotation:
-  marker_file: null # Path to marker gene JSON file (null means skip)
-  annotation_key: "cell_type_annotation" # Base key for results in adata.obs
-  method: "overlap_count" # 'overlap_count', 'overlap_coef', 'jaccard'
+annotation: # <-- Updated section
+  tool: 'none' # Options: 'marker_overlap', 'celltypist', 'none'
+  # Params for marker_overlap (used if tool is 'marker_overlap')
+  marker_file: null # Path to JSON marker file. REQUIRED if tool='marker_overlap'
+  annotation_method: "overlap_count" # Method for overlap ('overlap_count', 'overlap_coef', 'jaccard')
+  # Params for celltypist (used if tool is 'celltypist')
+  celltypist_model: "Immune_All_Low.pkl" # Default model, e.g., "Immune_All_Low.pkl"
+  celltypist_majority_voting: false
+  # General annotation params
+  annotation_key: "cell_type_annotation" # Base key for output column(s) in adata.obs
 
 plotting:
-  umap_color: # List of features
+  umap_color: # List of features (obs keys or var names)
     - "leiden"
     - "n_genes_by_counts"
     - "pct_counts_mt"
-  dge_n_genes: 5
+    # Annotation key will be added automatically if annotation runs
+  run_qc_violin: true # Generate QC violin plots?
+  qc_violin_keys: # List of obs keys for QC violin plot
+    - "n_genes_by_counts"
+    - "total_counts"
+    - "pct_counts_mt"
+  run_dge_plots: true # Generate all DGE plots?
+  dge_n_genes: 5 # Number of top genes for DGE plots
+  run_dge_heatmap: true # Generate DGE heatmap specifically?
   dpi: 150
-  format: "png"
+  format: "png" # Options: 'png', 'pdf', 'svg'
