@@ -1,9 +1,5 @@
 
 
-# scrnaseq-agent-pipeline
-=======
-# scrnaseq_agent
-=======
 # scRNA-seq Agent Pipeline
 
 ## Overview
