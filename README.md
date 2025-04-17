@@ -1,14 +1,10 @@
-
-
-# scrnaseq-agent-pipeline
-=======
-# scrnaseq_agent
-=======
-# scRNA-seq Agent Pipeline
+# scRNA-seq Agent Pipeline (`scrnaseq-agent`)
 
 ## Overview
 
-This project provides a modular, configurable, and tested command-line tool for running standard single-cell RNA-seq (scRNA-seq) analysis workflows using [Scanpy](https://scanpy.readthedocs.io/). It is designed to simplify the execution of common analysis steps for researchers, acting as an orchestrator for the underlying functions.
+This project provides a modular, configurable, and tested command-line tool (`scrnaseq-agent`) for running standard single-cell RNA-seq (scRNA-seq) analysis workflows using [Scanpy](https://scanpy.readthedocs.io/). It is designed to simplify the execution of common analysis steps for researchers, acting as an orchestrator for the underlying functions.
+
+Currently, the tool orchestrates a standard Scanpy-based workflow using PCA for dimensionality reduction. It serves as a well-tested foundation for future development towards integrating more advanced models (like scVI) and potentially an LLM-driven agentic framework.
 
 The current version implements the following core workflow:
 1.  **Data Loading:** Handles 10x Genomics MTX directories and AnnData `.h5ad` files.
@@ -18,12 +14,12 @@ The current version implements the following core workflow:
 5.  **Clustering & Visualization Embedding:** Computes a nearest neighbor graph, performs Leiden clustering, and calculates a UMAP embedding.
 6.  **Marker Gene Identification:** Finds differentially expressed genes (marker genes) for each cluster using the Wilcoxon rank-sum test by default. Can operate on raw or processed counts.
 7.  **Cell Type Annotation (Optional):**
-    *   **Marker Overlap:** Annotates clusters based on overlap with a user-provided JSON marker gene file (`sc.tl.marker_gene_overlap`).
+    *   **Marker Overlap:** Annotates clusters based on overlap with a user-provided JSON marker gene file (`sc.tl.marker_gene_overlap`). Requires DGE results to be generated first. *(Note: In the current workflow order, this specific method might need adjustment as annotation runs before DGE)*.
     *   **CellTypist:** Performs automated cell type prediction using pre-trained models (`celltypist.annotate`).
 8.  **Visualization:** Generates UMAP plots colored by cluster, QC metrics, or specified genes/annotations, plus DGE dot plots, stacked violin plots, and heatmaps.
 9.  **Output:** Saves the final processed AnnData object containing all results and generated plots to a specified directory.
 
-The pipeline is orchestrated by the `ScrnaSeqWorkflow` class (`scrnaseq_agent/agent.py`) and driven by a command-line interface (`scrnaseq_agent/cli.py`) configurable via arguments and a YAML file.
+The pipeline is orchestrated by the `ScrnaSeqWorkflow` class (`scrnaseq_agent/agent.py`) and driven by a command-line interface (`scrnaseq_agent/cli.py`) configurable via arguments and a YAML file (`config/default_config.yaml`).
 
 ## Installation
 
@@ -40,22 +36,24 @@ The pipeline is orchestrated by the `ScrnaSeqWorkflow` class (`scrnaseq_agent/ag
     ```
 
 2.  **Create and Activate Conda Environment:**
+    An `environment.yml` file is provided to ensure consistent dependency installation.
     ```bash
-    # Create the environment (this might take a few minutes)
-    conda create --name scrnaseq_agent_env python=3.10 -y
+    # Create the environment from the file (recommended)
+    conda env create -f environment.yml -n scrnaseq_agent_env
     conda activate scrnaseq_agent_env
-
-    # Install dependencies using pip within the conda environment
-    # (Using pip here as scikit-misc might be easier via pip)
-    pip install scanpy pandas matplotlib pyyaml leidenalg python-igraph scikit-misc celltypist
     ```
-    *(Note: You can also create an `environment.yml` file listing these dependencies for easier recreation)*
+    *(Alternatively, you can create a base environment and install packages manually, referencing `environment.yml` or `setup.py` for the correct dependencies):*
+    ```bash
+    # conda create --name scrnaseq_agent_env python=3.10 -y
+    # conda activate scrnaseq_agent_env
+    # pip install scanpy pandas matplotlib pyyaml leidenalg python-igraph scikit-misc celltypist pytest # Add other dependencies as needed
+    ```
 
-3.  **Install the Package (Editable Mode):** Install the `scrnaseq-agent` package itself in editable mode (`-e`) from the cloned directory root. This links the installed package to your source code.
+3.  **Install the Package (Editable Mode):** Install the `scrnaseq-agent` package itself in editable mode (`-e`) from the cloned directory root. This links the installed package to your source code and makes the `scrnaseq-agent` command available.
     ```bash
     pip install -e .
     ```
-    This step also creates the `scrnaseq-agent` command-line tool within your active environment.
+    The required dependencies are formally listed in `setup.py`.
 
 ## Usage
 
@@ -63,8 +61,8 @@ The pipeline is run using the `scrnaseq-agent` command.
 
 **Required Arguments:**
 
-*   `-i PATH`, `--input-path PATH`: Path to your input data (e.g., `./data/my_10x_dir/` or `./data/my_data.h5ad`).
-*   `-o PATH`, `--output-dir PATH`: Path to the directory where results will be saved (e.g., `./results/my_run`).
+*   `-i PATH`, `--input-path PATH`: Path to your input data (e.g., `./test_data/filtered_gene_bc_matrices/hg19/` or `./test_data/pbmc3k.h5ad`).
+*   `-o PATH`, `--output-dir PATH`: Path to the directory where results will be saved (e.g., `./pipeline_output/my_run`).
 
 **Configuration:**
 
@@ -86,6 +84,7 @@ Parameters are controlled using a combination of a YAML config file and command-
     ```
 
 2.  **Run using config file but override QC and clustering:**
+    *(Example assumes an input file `./new_data/HumanOralAtlas_Palate.h5ad` exists)*
     ```bash
     scrnaseq-agent \
         -i ./new_data/HumanOralAtlas_Palate.h5ad \
@@ -110,6 +109,7 @@ Parameters are controlled using a combination of a YAML config file and command-
     ```
 
 4.  **Run using Marker Overlap annotation:**
+    *(Note: Ensure the marker overlap method aligns with the pipeline order - DGE results needed)*
     ```bash
     # First, ensure config/pbmc_markers.json exists (or create your own)
     # Example content for config/pbmc_markers.json:
@@ -132,7 +132,7 @@ Parameters are controlled using a combination of a YAML config file and command-
 
 ## Configuration File (`config/default_config.yaml`)
 
-This file defines default parameters for each step. Key sections include: `qc`, `preprocessing`, `dimred`, `clustering`, `dge`, `annotation`, `plotting`.
+This file defines default parameters for each step. Key sections include: `qc`, `preprocessing`, `dimred`, `clustering`, `dge`, `annotation`, `plotting`. See the file for detailed parameter options.
 
 **Important Parameters to Check/Modify per Dataset:**
 *   `qc -> mito_prefix`: Match organism (e.g., `MT-` or `mt-`).
@@ -144,13 +144,13 @@ This file defines default parameters for each step. Key sections include: `qc`, 
 
 The pipeline generates the following in the specified output directory (`-o`):
 *   **`<output_prefix>_final.h5ad`**: The final AnnData object containing normalized data, HVGs, scaling (in `.X`), PCA (`.obsm['X_pca']`), neighbors graph (`.uns['neighbors']`, `.obsp`), clustering (`.obs['leiden']`), UMAP (`.obsm['X_umap']`), DGE results (`.uns`), annotations (`.obs`), and raw counts (in `.raw` if available).
-*   **QC Plots:** `*_qc_violin_prefilt.png`, `*_qc_violin_postfilt.png`.
-*   **UMAP Plots:** `*_umap_<feature>.png` (or other format).
+*   **QC Plots:** `*_qc_violin_prefilt.png`, `*_qc_violin_postfilt.png` (if enabled).
+*   **UMAP Plots:** `*_umap_<feature>.png` (or other format, if enabled).
 *   **DGE Plots:** `*_dge_dotplot.png`, `*_dge_violin.png`, `*_dge_heatmap.png` (if enabled).
 
 ## Testing
 
-This project uses `pytest`.
+A comprehensive test suite using `pytest` ensures reliability. All 69 tests are currently passing. To run the tests:
 
 1.  Make sure you are in the activated conda environment where you installed the package (`pip install -e .`).
 2.  Navigate to the project root directory.
@@ -159,9 +159,11 @@ This project uses `pytest`.
     pytest -v
     ```
 
+## Future Directions
+
+*   Integration of alternative dimensionality reduction methods (e.g., scVI).
+*   Development of an LLM-based agentic layer for dynamic workflow execution and interpretation.
+
 ## License
 
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
-
-
+This project is licensed under the MIT License. See the `LICENSE` file in the repository root for the full text.
